@@ -7,7 +7,7 @@ import java.util.concurrent.locks.Lock;
  * @class SimpleAtomicLong
  *
  * @brief This class implements a subset of the
- *        java.util.concurrent.atomic.SimpleAtomicLong class using a
+ *        java.util.concurrent.atomic.AtomicLong class using a
  *        ReentrantReadWriteLock to illustrate how they work.
  */
 class SimpleAtomicLong
@@ -23,30 +23,40 @@ class SimpleAtomicLong
 
     // TODO -- you fill in here by replacing the null with an
     // initialization of ReentrantReadWriteLock.
-    private ReentrantReadWriteLock mRWLock = null;
-
+    private ReentrantReadWriteLock mRWLock = new ReentrantReadWriteLock();
+ 
     /**
      * Creates a new SimpleAtomicLong with the given initial value.
      */
     public SimpleAtomicLong(long initialValue)
     {
         // TODO -- you fill in here
+        mValue = initialValue;
     }
-
+ 
     /**
      * @brief Gets the current value.
-     * 
+     *
      * @returns The current value
      */
     public long get()
     {
         long value;
-
+ 
         // TODO -- you fill in here
-
+        mRWLock.readLock().lock();
+                try
+                {
+                        value = mValue;
+                }
+                finally
+                {
+                        mRWLock.readLock().unlock();
+                }
+ 
         return value;
     }
-
+ 
     /**
      * @brief Atomically decrements by one the current value
      *
@@ -55,12 +65,22 @@ class SimpleAtomicLong
     public long decrementAndGet()
     {
         long value = 0;
-
+ 
         // TODO -- you fill in here
-
+        mRWLock.writeLock().lock();
+                try
+                {
+                        mValue--;
+                        value = mValue;
+                }
+                finally
+                {
+                        mRWLock.writeLock().unlock();
+                }
+ 
         return value;
     }
-
+ 
     /**
      * @brief Atomically increments by one the current value
      *
@@ -69,12 +89,22 @@ class SimpleAtomicLong
     public long getAndIncrement()
     {
         long value = 0;
-
+ 
         // TODO -- you fill in here
-
+        mRWLock.writeLock().lock();
+                try
+                {
+                        value = mValue;
+                        mValue++;
+                }
+                finally
+                {
+                        mRWLock.writeLock().unlock();
+                }
+ 
         return value;
     }
-
+ 
     /**
      * @brief Atomically decrements by one the current value
      *
@@ -83,12 +113,22 @@ class SimpleAtomicLong
     public long getAndDecrement()
     {
         long value = 0;
-
+ 
         // TODO -- you fill in here
-
+        mRWLock.writeLock().lock();
+                try
+                {
+                        value = mValue;
+                        mValue--;
+                }
+                finally
+                {
+                        mRWLock.writeLock().unlock();
+                }
+ 
         return value;
     }
-
+ 
     /**
      * @brief Atomically increments by one the current value
      *
@@ -97,10 +137,19 @@ class SimpleAtomicLong
     public long incrementAndGet()
     {
         long value = 0;
-
+ 
         // TODO -- you fill in here
-
+        mRWLock.writeLock().lock();
+                try
+                {
+                        mValue++;
+                        value = mValue;
+                }
+                finally
+                {
+                        mRWLock.writeLock().unlock();
+                }
+ 
         return value;
-    }
+        }
 }
-
