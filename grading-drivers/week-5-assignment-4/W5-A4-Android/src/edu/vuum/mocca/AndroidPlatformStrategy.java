@@ -45,10 +45,8 @@ public class AndroidPlatformStrategy extends PlatformStrategy
     /** Do any initialization needed to start a new game. */
     public void begin()
     {
-        /** Reset the CountDownLatch. */
+        /** (Re)initialize the CountDownLatch. */
         // TODO - You fill in here.
-    	// Note: same as console platform strategy
-    	mLatch = new CountDownLatch(2);
     }
 
     /** Print the outputString to the display. */
@@ -59,47 +57,18 @@ public class AndroidPlatformStrategy extends PlatformStrategy
          * and appends the outputString to a TextView. 
          */
         // TODO - You fill in here.
-    	// Note: Post runnable using runOnUIThread()
-        Activity activity = mActivity.get();
-        activity.runOnUiThread(new Runnable() {
-           public void run() {
-        	   mTextViewOutput.append(outputString + "\n");                 
-           }
-        });
     }
 
-	/** Indicate that a game thread has finished running. */
+    /** Indicate that a game thread has finished running. */
     public void done()
     {	
         // TODO - You fill in here.
-    	// Note: Call RunOnUIThread with a runnable or
-    	// decrement the CountDownLatch directly
-    	Activity activity = mActivity.get();
-    	activity.runOnUiThread(new Runnable() {
-    		public void run() {
-    			mLatch.countDown();
-    		}
-    	}
-      );
     }
 
     /** Barrier that waits for all the game threads to finish. */
     public void awaitDone()
     {
         // TODO - You fill in here.
-    	// Note: same as console platform strategy    }
-        {
-            try {
-                mLatch.await();
-            } catch(java.lang.InterruptedException e) {
-            }
-        }
-    }
-    
-    /** Returns the platform name in a String. */
-    public String platformName() 
-    {
-        return System.getProperty("java.specification.vendor");
     }
 
     /** 
@@ -111,4 +80,3 @@ public class AndroidPlatformStrategy extends PlatformStrategy
        Log.e(javaFile, errorMessage);
     }
 }
-
