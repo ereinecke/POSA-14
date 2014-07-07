@@ -25,7 +25,7 @@ public class SimpleSemaphore {
      */
     // TODO - you fill in here
 	// NOTE - could've or should've been private
-	final Condition PermitsAvail;
+	private final Condition PermitsAvail;
 
     /**
      * Define a count of the number of available permits.

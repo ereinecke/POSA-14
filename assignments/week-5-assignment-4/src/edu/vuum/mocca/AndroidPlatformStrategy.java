@@ -61,6 +61,9 @@ public class AndroidPlatformStrategy extends PlatformStrategy
         // TODO - You fill in here.
     	// Note: Post runnable using runOnUIThread()
         Activity activity = mActivity.get();
+        // Note: should check to see if activity is null
+        // if (activity != null) { }
+        // To be complete, you could do try/catch
         activity.runOnUiThread(new Runnable() {
            public void run() {
         	   mTextViewOutput.append(outputString + "\n");                 
@@ -75,6 +78,10 @@ public class AndroidPlatformStrategy extends PlatformStrategy
     	// Note: Call RunOnUIThread with a runnable or
     	// decrement the CountDownLatch directly
     	Activity activity = mActivity.get();
+        // Note: should check to see if activity is null
+        // if (activity != null) { }
+        // To be complete, you could do try/catch
+    	// Could also do just mLatch.countdown()
     	activity.runOnUiThread(new Runnable() {
     		public void run() {
     			mLatch.countDown();
