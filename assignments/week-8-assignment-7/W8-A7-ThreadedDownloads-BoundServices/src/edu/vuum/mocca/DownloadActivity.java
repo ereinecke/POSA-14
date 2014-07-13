@@ -1,5 +1,6 @@
 package edu.vuum.mocca;
 
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.ServiceConnection;
 import android.net.Uri;
@@ -70,13 +71,13 @@ public class DownloadActivity extends DownloadBase {
              */
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
-            	Log.d(TAG, "ComponentName: " + name);
+            	Log.d(TAG, "Sync ComponentName: " + name);
                 // TODO You fill in here to replace null with a call
                 // to a generated stub method that converts the
                 // service parameter into an interface that can be
                 // used to make RPC calls to the Service.
 
-                mDownloadCall = null;
+                mDownloadCall = DownloadCall.Stub.asInterface(service);
             }
 
             /**
@@ -104,12 +105,13 @@ public class DownloadActivity extends DownloadBase {
             @Override
 		public void onServiceConnected(ComponentName name,
                                                IBinder service) {
-                // TODO You fill in here to replace null with a call
+            	Log.d(TAG, "Async ComponentName: " + name);
+            	// TODO You fill in here to replace null with a call
                 // to a generated stub method that converts the
                 // service parameter into an interface that can be
                 // used to make RPC calls to the Service.
 
-                mDownloadRequest = null;
+                mDownloadRequest = DownloadRequest.Stub.asInterface(service);
             }
 
             /**
@@ -144,8 +146,16 @@ public class DownloadActivity extends DownloadBase {
                 // image whose pathname is passed as a parameter to
                 // sendPath().  Please use displayBitmap() defined in
                 // DownloadBase.
+          	    final DownloadActivity activity = DownloadActivity.this;
 
-                Runnable displayRunnable = null;
+           	    Runnable displayRunnable = new Runnable() {
+           	        @Override
+           	        public void run() {
+           	            // Use 'activity' here in order to call displayBitmap()
+           	        	activity.displayBitmap(imagePathname);
+                	}
+                };
+                runOnUiThread(displayRunnable);
             }
         };
      
@@ -162,13 +172,37 @@ public class DownloadActivity extends DownloadBase {
         case R.id.bound_sync_button:
             // TODO - You fill in here to use mDownloadCall to
             // download the image & then display it.
+            if (mDownloadCall != null)
+                try {
+                    Log.d(TAG,
+                          "Calling twoway DownloadCall.downloadImage(" + uri.toString() + ")");
+
+                    String fileLocation = mDownloadCall.downloadImage(uri);
+                    displayBitmap(fileLocation);
+
+                } catch (RemoteException e1) {
+                    e1.printStackTrace();
+                }
+       	
             break;
 
         case R.id.bound_async_button:
             // TODO - You fill in here to call downloadImage() on
             // mDownloadRequest, passing in the appropriate Uri and
             // callback.
+            if (mDownloadRequest != null)
+                try {
+                    Log.d(TAG,
+                          "Calling oneway DownloadRequest.downloadImage(" + uri.toString() + ")");
+
+                    mDownloadRequest.downloadImage(uri, mDownloadCallback);
+
+                } catch (RemoteException e1) {
+                    e1.printStackTrace();
+                }
+                
             break;
+
         }
     }
 

@@ -1,0 +1,608 @@
+OK, by now most of you looking for this thread will know the drill. Just like in previous weeks, I transcribed the relevant portions of Doug's virtual office hour and pasted in/transcribed what he said regarding the different TODO sections for the upcoming assignment (preceded with a quadruple slash). I hope this helps some of you. This assignment is a little harder than last week's, so make sure you start in time as it might take longer.
+
+There are 10 TODO sections in total, spanning over 4 files.
+
+1 TODOs in DownloadUtils.java
+5 TODOs in DownloadActivity.java
+2 TODOs in DownloadBoundServiceSync.java
+2 TODOs in DownloadBoundServiceAsync.java
+
+This shouldn't violate the honor code as this is just a transcript of what Doug said in his video. In case some of this is not clear I would recommend you watch the virtual office hour video as Doug explains the functionality of the whole application in detail.
+
+If this feels fairly familiar, it's because it is somewhat similar to Week6 Assignment5. Two weeks ago we had to implement DownloadIntent as well as a Threadpool. This time we have to implement synchroneous as well as asynchroneous AIDL interactions. 
+
+If you do not know what AIDL is I would recommend you watch this lecture first. 
+If you know what it is but not how it works, then watch this lecture. 
+If you know how it works but not how to implement it, then watch this lecture [starting at 14:00].
+
+Also, as Manjula pointed out below, there is a GeoNamesApplication on Github that is very similar to this assignment. Should you be stuck, you can simply look there for additional guidance.
+
+
+[DownloadUtils.java]
+This is just a slight variant of the one that we had before. You have a downloadFile method which has an offline and an online version.
+
+// TODO - You can change this to the appropriate setting for your
+// environment.
+static final boolean DOWNLOAD_OFFLINE = true;
+
+The helper method downloadFile is what's going to be called by the various async or synchronous services to do the job.
+
+
+[DownloadActivity.java]
+The skeleton from the activity side is similar to the one that we used from week6 assignment5. Basically it prompts you to enter in a URL and then it goes ahead and downloads the image in a service and passes it back to the activity. Once again we divide up the activity into two parts. We have the DownloadActivity which is where we do most of the work having to do with the communication. And then we also have DownloadBase which is where we do things that relate to basically user interface displays and prompting the user and so on. The activity itself is doing the bulk of the work.
+
+package edu.vuum.mocca;
+
+import android.content.ComponentName;
+import android.content.ServiceConnection;
+import android.net.Uri;
+import android.os.IBinder;
+import android.os.RemoteException;
+import android.util.Log;
+import android.view.View;
+
+/**
+ * This is the main Activity that the program uses to start the
+ * ThreadedDownloads application.  It allows the user to input the URL
+ * of an image and download that image using one of two different
+ * Android Bound Service implementations: synchronous and
+ * asynchronous.  The Activity starts the Service using bindService().
+ * After the Service is started, its onBind() hook method returns an
+ * implementation of an AIDL interface to the Activity by
+ * asynchronously calling the onServiceConnected() hook method in the
+ * Activity.  The AIDL interface object that's returned can then be
+ * used to interact with the Service either synchronously or
+ * asynchronously, depending on the type of AIDL interface requested.
+ * 
+ * Starting Bound Services to run synchronously in background Threads
+ * from the asynchronous UI Thread is an example of the
+ * Half-Sync/Half-Async Pattern.  Starting Bound Services using
+ * Intents is an example of the Activator and Command Processor
+ * patterns.  The DownloadActivity plays the role of the Creator and
+ * creates a Command in the form of an Intent.  The Intent is received
+ * by the Service process, which plays the role of the Executor.
+ * 
+ * The use of AIDL interfaces to pass information between two
+ * different processes is an example of the Broker Pattern, in which
+ * all communication-related functionality is encapsulated in the AIDL
+ * interface and the underlying Android Binder framework, shielding
+ * applications from tedious and error-prone aspects of inter-process
+ * communication.
+ */
+public class DownloadActivity extends DownloadBase {
+    /**
+     * Used for debugging.
+     */
+    private final String TAG = this.getClass().getSimpleName(); 
+    
+    /**
+     * The AIDL Interface that's used to make twoway calls to the
+     * DownloadServiceSync Service.  This object plays the role of
+     * Requestor in the Broker Pattern.  If it's null then there's no
+     * connection to the Service.
+     */
+    DownloadCall mDownloadCall;
+     
+    /**
+     * The AIDL Interface that we will use to make oneway calls to the
+     * DownloadServiceAsync Service.  This plays the role of Requestor
+     * in the Broker Pattern.  If it's null then there's no connection
+     * to the Service.
+     */
+    DownloadRequest mDownloadRequest;
+    //// mDownloadCall and mDownloadRequest are basically the object
+    //// references to those objects we just looked at defined in AIDL. 
+     
+    /** 
+     * This ServiceConnection is used to receive results after binding
+     * to the DownloadServiceSync Service using bindService().
+     */
+    ServiceConnection mServiceConnectionSync = new ServiceConnection() {
+            //// Here is the service connection callback object. As you
+            //// can see here we have two of these. One for the
+            //// synchronous communication and one for the asynchronous 
+            //// communication. They are essentially the same, just 
+            //// different terms of the details of which interface is
+            //// assigned. And that's why for general purpose use we 
+            //// define something called a generic service connection, 
+            //// which I'll show you later. We don't use that for this
+            //// particular assignment, but we could if we wanted to.
+            /**
+             * Cast the returned IBinder object to the DownloadCall
+             * AIDL Interface and store it for later use in
+             * mDownloadCall.
+             */
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+            	Log.d(TAG, "ComponentName: " + name);
+                // TODO You fill in here to replace null with a call
+                // to a generated stub method that converts the
+                // service parameter into an interface that can be
+                // used to make RPC calls to the Service.
+                //// As you can see here we have the onServiceConnected 
+                //// hook method. This is called back automatically by 
+                //// android and its binder framework, which basically 
+                //// is implementing the broker pattern. And when this 
+                //// is called back it is called back after the service 
+                //// is connected and it takes the binder object 
+                //// returned by the onbind method in the service, 
+                //// which is a factory method, and it passes it back 
+                //// here. This is basically a hook method, which is 
+                //// also to some extend used as a factory method and 
+                //// it takes the service that comes back and it goes 
+                //// ahead and will essentially convert this thing into 
+                //// an interface by taking the ibinder parameter, 
+                //// which is called service and then essentially 
+                //// converting it into a downloadCall reference. And 
+                //// it uses the stub method to do this and it basically 
+                //// says stub as interface to do the conversion. So 
+                //// that's one of the things that you have to fill in.
+
+                mDownloadCall = null;
+            }
+
+            /**
+             * Called if the remote service crashes and is no longer
+             * available.  The ServiceConnection will remain bound,
+             * but the service will not respond to any requests.
+             */
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                //// Here is the onServiceDisconnected method. This 
+                //// basically just sets the DownloadCall member to null
+                mDownloadCall = null;
+            }
+    	 
+        };
+     
+    /** 
+     * This ServiceConnection is used to receive results after binding
+     * to the DownloadServiceAsync Service using bindService().
+     */
+    ServiceConnection mServiceConnectionAsync = new ServiceConnection() {
+            /**
+             * Cast the returned IBinder object to the DownloadRequest
+             * AIDL Interface and store it for later use in
+             * mDownloadRequest.
+             */
+            @Override
+		public void onServiceConnected(ComponentName name,
+                                               IBinder service) {
+                // TODO You fill in here to replace null with a call
+                // to a generated stub method that converts the
+                // service parameter into an interface that can be
+                // used to make RPC calls to the Service.
+                //// Here is the async version of this thing. As you 
+                //// can see the logic is essentially the same. The 
+                //// only difference of course being that this deals 
+                //// with a DownloadRequest reference as supposed to 
+                //// a DownloadCall reference. And once again you do 
+                //// basically the same thing here, so you can fill 
+                //// it in as per the TODO comment. 
+
+                mDownloadRequest = null;
+            }
+
+            /**
+             * Called if the remote service crashes and is no longer
+             * available.  The ServiceConnection will remain bound,
+             * but the service will not respond to any requests.
+             */
+            @Override
+		public void onServiceDisconnected(ComponentName name) {
+                mDownloadRequest = null;
+            }
+        };
+     
+    /**
+     * The implementation of the DownloadCallback AIDL
+     * Interface. Should be passed to the DownloadBoundServiceAsync
+     * Service using the DownloadRequest.downloadImage() method.
+     * 
+     * This implementation of DownloadCallback.Stub plays the role of
+     * Invoker in the Broker Pattern.
+     */
+    DownloadCallback.Stub mDownloadCallback = new DownloadCallback.Stub() {
+            /**
+             * Called when the DownloadServiceAsync finishes obtaining
+             * the results from the GeoNames Web service.  Use the
+             * provided String to display the results in a TextView.
+             */
+            @Override
+            public void sendPath(final String imagePathname) throws RemoteException {
+                // TODO - You fill in here to replace null with a new
+                // Runnable whose run() method displays the bitmap
+                // image whose pathname is passed as a parameter to
+                // sendPath().  Please use displayBitmap() defined in
+                // DownloadBase.
+                //// Here now is the DownloadCallback stub that you have 
+                //// to implement on the activity (client) side in order 
+                //// to be able to receive callbacks from the service. 
+                //// And so when the asynchronous version of the service 
+                //// is finished downloading the file into a local file, 
+                //// it extracts the file name and it goes ahead and 
+                //// invokes the SendPath on the download callback, it 
+                //// was passed as a parameter. And as you can imagine 
+                //// here it's just going to go ahead and display the 
+                //// results. And you'll have to do this in a way that 
+                //// gets the results back to the user interface thread, 
+                //// but that's easy because you simply have to use the 
+                //// runonuithread method to do that.
+
+                Runnable displayRunnable = null;
+            }
+        };
+     
+    /**
+     * This method is called when a user presses a button (see
+     * res/layout/activity_download.xml)
+     */
+    public void runService(View view) {
+        Uri uri = Uri.parse(getUrlString());
+
+        hideKeyboard();
+
+    	switch (view.getId()) {
+        case R.id.bound_sync_button:
+            // TODO - You fill in here to use mDownloadCall to
+            // download the image & then display it.
+            //// Here is the runService method itself. Some work you 
+            //// have to do here. If the user hits the synchronous 
+            //// button then you have to go ahead and bind the service, 
+            //// passing in the appropriate service connection and 
+            //// the intent that you need to locate the service. 
+            //// And of course you get that by using the makeintent 
+            //// factory method that is defined in the appropriate 
+            //// service. 
+            //// Now here is where it gets interesting. If you are 
+            //// so inclined you can certainly implement this to do a 
+            //// two-way call here directly in the runservice method, 
+            //// although strictly speaking that's not the best thing 
+            //// to do. We even make this work at all by disabling the 
+            //// policy that prevents this from blocking back in the 
+            //// downloadbase class. But a much better thing to do is 
+            //// to go ahead and use an async task or a thread and a 
+            //// runnable to go ahead and create a thread or 
+            //// start/execute a task and then run the request to do 
+            //// the two-way call in the background and then take the 
+            //// result and go ahead and display it. And when we do 
+            //// virtual office hours next week when I show the final 
+            //// solution for all this stuff I will illustrate how I 
+            //// used an async task to do this. It's really easy. 
+            //// It's just a couple of lines of code and it allows us 
+            //// to run the two-way call in a background thread and 
+            //// then when it's done we go ahead and display it back 
+            //// using the user interface thread either with an 
+            //// onPostExecute method or by doing runOnUiThread. 
+            //// Either one of those works.
+            break;
+
+        case R.id.bound_async_button:
+            // TODO - You fill in here to call downloadImage() on
+            // mDownloadRequest, passing in the appropriate Uri and
+            // callback.
+            //// So the async case is a little easier because the call 
+            //// is just a one-way call, so it doesn't block. So you 
+            //// end up getting the results back by the callback we 
+            //// looked at earlier (sendPath). Note by the way that 
+            //// when this callback (sendPath) is invoked because it 
+            //// is using AIDL, that will go ahead and run in a thread 
+            //// of a pool of threads that is provided by the binder 
+            //// framework to the activity. And that's why you have to 
+            //// make sure that you take the results and get it back 
+            //// to the user interface thread so that it can be 
+            //// displayed.
+            break;
+        }
+    }
+
+    /**
+     * Hook method called when the DownloadActivity becomes visible to
+     * bind the Activity to the Services.
+     */
+    @Override
+    public void onStart () {
+    	super.onStart();
+    	
+    	// Bind this activity to the DownloadBoundService* Services if
+    	// they aren't already bound Use mBoundSync/mBoundAsync
+    	if (mDownloadCall == null) 
+            bindService(DownloadBoundServiceSync.makeIntent(this), 
+                        mServiceConnectionSync, 
+                        BIND_AUTO_CREATE);
+    	if (mDownloadRequest == null)
+            bindService(DownloadBoundServiceAsync.makeIntent(this), 
+                        mServiceConnectionAsync, 
+                        BIND_AUTO_CREATE);
+    }
+    
+    /**
+     * Hook method called when the DownloadActivity becomes completely
+     * hidden to unbind the Activity from the Services.
+     */
+    @Override
+    public void onStop () {
+    	super.onStop();
+    	
+    	// Unbind the Sync/Async Services if they are bound. Use
+    	// mBoundSync/mBoundAsync
+    	if (mDownloadCall != null) 
+            unbindService(mServiceConnectionSync);
+    	if (mDownloadRequest != null) 
+            unbindService(mServiceConnectionAsync);
+    }
+    
+    // Public accessor method for testing purposes
+    public DownloadCall getDownloadCall () {
+    	return mDownloadCall;
+    }
+    
+    // Public accessor method for testing purposes
+    public DownloadRequest getDownloadRequest () {
+    	return mDownloadRequest;
+    }
+    
+    // Public accessor method for testing purposes
+    public DownloadCallback getDownloadCallback () {
+    	return mDownloadCallback;
+    }
+    
+    // Public accessor method for testing purposes
+    public boolean isBoundToSync () {
+    	return mDownloadCall != null;
+    }
+    
+    // Public accessor method for testing purposes
+    public boolean isBoundToAsync () {
+    	return mDownloadRequest != null;
+    }     
+    
+}
+
+
+
+[DownloadBoundServiceSync.java]
+package edu.vuum.mocca;
+
+import android.app.Service;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.IBinder;
+import android.os.RemoteException;
+
+/**
+ * @class DownloadBoundServiceSync
+ *
+ * @brief This class handles downloads using synchronous AIDL
+ *        interactions.
+ * 
+ *        The component that binds to this service should receive an
+ *        IBinder. This IBinder should be an instance of DownloadCall,
+ *        which extends IBinder. The component can then interact with
+ *        this service by making normal calls on the DownloadCall
+ *        object. Specifically, the component can ask this service to
+ *        download an image by calling downloadImage() on the
+ *        DownloadCall object, which will run synchronously in this
+ *        service until it finishes downloading and returns the file
+ *        name of the downloaded file as a String.
+ *  
+ *        AIDL is an example of the Broker Pattern, in which all
+ *        interprocess communication details are hidden behind the
+ *        AIDL interfaces.
+ */
+public class DownloadBoundServiceSync extends Service {
+    /**
+     * An implementation of the AIDL Interface DownloadCall.  We
+     * extend the Stub class, which implements DownloadCall, so that
+     * Android can properly handle calls across process boundaries.
+     * 
+     * This implementation plays the role of Invoker in the Broker
+     * Pattern
+     */
+    DownloadCall.Stub mDownloadCallImpl = new DownloadCall.Stub() {
+            //// Here we have the DownloadCall implementation which is 
+            //// going to allocate a stub and that will go ahead and 
+            //// have a downloadImage hook method that is called.
+            /**
+             * Download the image at the given Uri and return a
+             * pathname to the file on the Android file system.
+             * 
+             * Use the methods defined in DownloadUtils for code
+             * brevity.
+             */
+            @Override
+            public String downloadImage(Uri uri) throws RemoteException {
+                // TODO You fill in here to replace the null and
+                // download the file using the appropriate helper
+                // method in DownloadUtils and then return the
+                // pathname back to the client.
+                //// All you have to do here of course is call the 
+                //// appropriate method in DownloadUtils to do the 
+                //// right work. And that will block synchronously 
+                //// until the call is done and then it returns the 
+                //// string back to the activity. Notice that in 
+                //// this particular case this method will always 
+                //// run in a separate thread from a pool of 
+                //// threads that is managed by the binder 
+                //// framework. So you don't have to worry about 
+                //// multi-threading. That's one of the nice things 
+                //// that comes kind of for free when you use AIDL 
+                //// and the binder. the dispatching takes place 
+                //// automatically for you in a separate thread 
+                //// from a pool of threads that is managed by the 
+                //// binder. So this method is really short and concise. 
+                return null;
+            }
+	};
+
+    /**
+     * Called when a component calls bindService() with the proper
+     * intent.  Return the concrete implementation of DownloadCall
+     * cast as an IBinder.
+     */
+    @Override
+	public IBinder onBind(Intent intent) {
+        //// Here is the onBind method. It's a factory method that 
+        //// returns the downloadcall implementation, which is 
+        //// defined above as the DownloadCall.Stub(), and that 
+        //// just gets returned.
+        return mDownloadCallImpl;
+    }
+
+    /**
+     * Make an Intent that will start this service when passed to
+     * bindService().
+     *
+     * @param context		The context of the calling component.
+     */
+    public static Intent makeIntent(Context context) {
+        // TODO - replace the null to create the appropriate Intent
+        // and return it to the caller.
+        //// And then the makeIntent method is where you have to do 
+        //// the logic to make an intent that can be used to start 
+        //// the DownloadBoundServiceSync. And that should be pretty 
+        //// straightforward to do.
+        return null;
+    }
+}
+
+
+
+[DownloadBoundServiceAsync.java]
+Here is the async version of this. It actually looks very similar in a lot of ways.
+package edu.vuum.mocca;
+
+import android.app.Service;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.IBinder;
+import android.os.RemoteException;
+
+/**
+ * @class DownloadBoundServiceAsync
+ 
+ * @brief This class handles downloads using asynchronous AIDL
+ *        interactions.  The component that binds to this service
+ *        should receive an IBinder. This IBinder should be an
+ *        instance of DownloadRequest, which extends IBinder. The
+ *        component can then interact with this service by making
+ *        normal calls on the DownloadRequest object. Specifically,
+ *        the component can ask this service to download an image,
+ *        passing in a DownloadCallback object.  Once the download is
+ *        finished, this service should send the pathname of the
+ *        downloaded file back to the calling component by calling
+ *        sendPath() on the DownloadCallback object.
+ *  
+ *        AIDL is an example of the Broker Pattern, in which all
+ *        interprocess communication details are hidden behind the
+ *        AIDL interfaces.
+ */
+public class DownloadBoundServiceAsync extends Service{
+    /**
+     * The concrete implementation of the AIDL Interface
+     * DownloadRequest.  We extend the Stub class, which implements
+     * DownloadRequest, so that Android can properly handle calls
+     * across process boundaries.
+     * 
+     * This implementation plays the role of Invoker in the Broker
+     * Pattern.
+     */
+    DownloadRequest.Stub mDownloadRequestImpl = new DownloadRequest.Stub() {
+            /**
+             * Download the image at the given Uri and return a
+             * pathname to the file on the Android file system by
+             * calling the sendPath() method on the provided callback
+             * 
+             * Use the methods defined in DownloadUtils for code brevity.
+             */
+            @Override
+            public void downloadImage(Uri uri,
+                                      DownloadCallback callback)
+                throws RemoteException {
+                // TODO You fill in here to download the file using
+                // the appropriate helper method in DownloadUtils and
+                // then send the pathname back to the client via the
+                // callback object.
+                //// Here is the downloadRequest implementation and 
+                //// it's a DownloadRequest.Stub(). And what we're 
+                //// going to do here is you're going to take the uri 
+                //// that has been passed in, you're going to call 
+                //// down to the DownloadUtils method to download the 
+                //// file. And then you're going to use the callback 
+                //// object in order to call the sendPath method to 
+                //// send this back to the client. Now this particular 
+                //// example has the callback running in the same 
+                //// thread that does the downloading. And in some 
+                //// ways that code is almost identical in terms of 
+                //// the service side behavior to what's done with the 
+                //// synchronous version. But there is no necessary 
+                //// reason why this has to be the case. You could go 
+                //// ahead if you were so inclined and you could queue 
+                //// up the callback and you could have that thing run 
+                //// by some other thread in the background if you 
+                //// wanted to. And there are various reasons why you 
+                //// might want to do that. One reason why you might 
+                //// want to do that is the fact that there is only a 
+                //// limited number of threads that are actually in 
+                //// the thread pool that's established by the binder. 
+                //// I would say the average is like 16. There is not 
+                //// an infinite number of threads in that pool. So if 
+                //// there were lots of client requests coming in, you 
+                //// might not actually want to block the calling 
+                //// thread for the duration of the call, because you 
+                //// could run out of threads. So in that particular 
+                //// case you might actually queue this thing up and 
+                //// then run it on a separate thread pool so you 
+                //// wouldn't end up blocking this thread for any 
+                //// length of time. So there's all kinds of other 
+                //// variations and that's the nice thing about having 
+                //// a callback object, because you can decouple the 
+                //// time and space when the callback is done to send 
+                //// the result back to the caller.
+            }
+
+	};
+
+    /**
+     * Called when a component calls bindService() with the proper
+     * intent.  Return the concrete implementation of DownloadRequest
+     * cast as an IBinder.
+     */
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mDownloadRequestImpl;
+    }
+
+    /**
+     * Make an Intent that will start this service when passed to
+     * bindService().
+     *
+     * @param context		The context of the calling component.
+     */
+    public static Intent makeIntent(Context context) {
+        // TODO - replace the null to create the appropriate Intent
+        // and return it to the caller.
+        //// It's got an onBind factory method that returns the 
+        //// appropriate binder object. You have to fill in the 
+        //// makeIntent method.
+        return null;
+    }
+}
+
+
+
+If you find this information useful, please up-vote this thread so it stays on top. It will help the stragglers of us (that try to get this assignment done last minute) to find it.
+
+
+As an addendum, I've also described what Doug said regarding the three AIDL files. This will be useful in understanding the differences between one-way (async) and two-way (sync) calls.
+
+[DownloadCall.aidl]
+The DownloadCall interface is an interface with a single two-way method called downloadImage. And as you can see you give it a uri of the image and then it goes ahead and will make a remote two-way call, where remote means to the service that's running in a different process. And as we will see in a minute when we look at the implementation of the service, the implementation of this particular object will run in a background thread. In the service, download the image, put into a local file, and then return a string which contains the pathname of the file. So that's basically what DownloadCall does, it's a two-way call.
+
+[DownloadRequest.aidl]
+DownloadRequest is a little different. This is used for asynchronous communication with a service. And what it does is it splits up the request for download with the response that is sent back. So this means that the client code will actually not block in the activity. It won't block the UI thread at all. What we do here is we have a one-way method called downloadImage. You pass the uri just like you did for the two-way version, except you also pass a callback object. And the callback object itself is a reference to an object that's defined using AIDL. And that's then used to receive the callback, and we'll see how that works in a second. 
+
+[DownloadCallback.aidl]
+Here is what the callback interface looks like. DownloadCallback is an interface and it has a single method which is also a one-way method, which means it won't block the caller. And that goes ahead and takes the file path as a string and it sends it back from the service to the activity. So you can see we are getting asynchronous here by splitting the interfaces up into two parts. One for the invocation, which is a one-way where you pass in an object reference to an object that's defined back in the activity. And one for the response, which sends the results back by having the service invoke a one-way method to send the path back to the activity. 
